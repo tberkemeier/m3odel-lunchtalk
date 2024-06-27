@@ -33,7 +33,7 @@ kp_logrange = [[-11.0, -7.0],
 env_sets_exp = [[0.00225, 6.36E+12], 
 [0.001125, 6.36E+12], 
 [0.00225, 5.0E+13], 
-[0.008, 1E+14],
+[0.008, 1E+13],
 ]
 
 # simulate each experiment
@@ -61,7 +61,7 @@ for env in env_sets_exp
     end
 
     # add absolute random error
-    out_y = out_y .+ 0.03 .* randn(length(out_y))
+    out_y = out_y .+ 0.02 .* randn(length(out_y))
     append!(exp_y, [out_y])
     append!(exp_t, [out_t])
 
@@ -87,8 +87,6 @@ end
 
 ### SAMPLING ###
 
-using CSV, DataFrames
-
 # priors
 priors = [
     LogUniform(10^kp_logrange[1][1], 10^kp_logrange[1][2]),
@@ -98,7 +96,7 @@ priors = [
 ]
 
 # sampling function
-function sample_and_evaluate(target_successes, threshold, name)
+function sample_and_evaluate(target_successes, threshold)
 
     successful_params = []
     errors = []
@@ -119,7 +117,7 @@ function sample_and_evaluate(target_successes, threshold, name)
         if current_progress > last_reported_progress
             acceptance_rate = length(successful_params) / total_attempts * 100
             println("Progress: $(current_progress)% complete. Acceptance Rate: $(round(acceptance_rate, digits=2))%")
-            last_reported_progress = current_progress  # Update the last reported progress
+            last_reported_progress = current_progress  # update the last reported progress
         end
     end
     
@@ -131,18 +129,12 @@ function sample_and_evaluate(target_successes, threshold, name)
     sort_indices = sortperm(errors)
     sorted_params = [successful_params[i] for i in sort_indices]
     
-    # create a DataFrame from the sorted parameter sets
-    df = DataFrame(hcat(sorted_params...)', :auto)
-    
-    # write the DataFrame to a CSV file
-    CSV.write(name, df)
-    
     return successful_params, errors
 end
 
 n_samples = 30
 threshold = 0.010
-successful_params, errors = sample_and_evaluate(n_samples, threshold, "df_posterior.csv")
+successful_params, errors = sample_and_evaluate(n_samples, threshold)
 
 ### PLOTTING ###
 
